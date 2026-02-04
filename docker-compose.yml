@@ -1,0 +1,42 @@
+services:
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./templates:/etc/nginx/templates:/etc/nginx/templates/default.conf.template
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    environment:
+      - NGINX_HOST=smarketics.com
+    command: /bin/sh -c 'envsubst ''$${NGINX_HOST}'' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"'
+    depends_on:
+      - moltbot
+
+  moltbot:
+    image: moltbot/moltbot:latest
+    container_name: moltbot-gateway
+    restart: unless-stopped
+    ports:
+      - "18789:18789"
+      - "18790:18790"
+    environment:
+      - CLAWDBOT_GATEWAY_TOKEN=${CLAWDBOT_GATEWAY_TOKEN}
+    volumes:
+      - clawdbot_config:/home/node/.clawdbot
+      - clawdbot_workspace:/home/node/clawd
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/conf:/etc/letsencrypt
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  clawdbot_config:
+  clawdbot_workspace:
