@@ -34,10 +34,7 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
-    command: >
-      sh -c "
-        certbot certonly --webroot -w /var/www/certbot --email your-email@example.com -d smarketics.com --text --agree-tos --no-eff-email -m 'your-email@example.com' --keep-until-expiring --rsa-key-size 4096 --non-interactive || true &&
-        /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    command: sh -c "certbot certonly --webroot -w /var/www/certbot --email smarketics@smarketics.com -d smarketics.com --text --agree-tos --no-eff-email --rsa-key-size 4096 --non-interactive || true && /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   clawdbot_config:
