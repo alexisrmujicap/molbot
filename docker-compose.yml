@@ -7,14 +7,13 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./templates:/etc/nginx/templates:/etc/nginx/templates/default.conf.template
+      - ./templates:/etc/nginx/templates
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
+      - ./entrypoint.sh:/entrypoint.sh
     environment:
       - NGINX_HOST=smarketics.com
-    command: /bin/sh -c 'envsubst ''$${NGINX_HOST}'' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g "daemon off;"'
-    depends_on:
-      - moltbot
+    entrypoint: /entrypoint.sh
 
   moltbot:
     image: moltbot/moltbot:latest
@@ -35,7 +34,10 @@ services:
     volumes:
       - ./certbot/www:/var/www/certbot
       - ./certbot/conf:/etc/letsencrypt
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    command: >
+      sh -c "
+        certbot certonly --webroot -w /var/www/certbot --email your-email@example.com -d smarketics.com --text --agree-tos --no-eff-email -m 'your-email@example.com' --keep-until-expiring --rsa-key-size 4096 --non-interactive || true &&
+        /bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   clawdbot_config:
