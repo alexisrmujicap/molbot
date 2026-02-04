@@ -12,7 +12,7 @@ services:
       - ./certbot/conf:/etc/letsencrypt
       - ./entrypoint.sh:/entrypoint.sh
     environment:
-      - NGINX_HOST=smarketics.com
+      - NGINX_HOST=moltbot.smarketics.com
     entrypoint: /entrypoint.sh
 
   moltbot:
