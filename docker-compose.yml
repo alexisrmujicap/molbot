@@ -4,16 +4,16 @@ services:
     container_name: nginx
     restart: always
     ports:
-      - "80:80"
-      - "443:443"
+        - "80:80"
+        - "443:443"
     volumes:
-      - ./templates:/etc/nginx/templates
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-      - ./entrypoint.sh:/entrypoint.sh
+        - ./templates:/etc/nginx/templates:ro
+        - /etc/letsencrypt:/etc/letsencrypt:ro
+        - /var/www/certbot:/var/www/certbot:ro
     environment:
-      - NGINX_HOST=moltbot.smarketics.com
-    entrypoint: /entrypoint.sh
+        - NGINX_HOST=smarketics.com
+        - NGINX_PORT=80
+        - NGINX_SSL_PORT=443
 
   moltbot:
     image: moltbot/moltbot:latest
@@ -27,16 +27,6 @@ services:
     volumes:
       - clawdbot_config:/home/node/.clawdbot
       - clawdbot_workspace:/home/node/clawd
-
-  certbot:
-    image: certbot/certbot
-    container_name: certbot
-    volumes:
-      - ./certbot/www:/var/www/certbot
-      - ./certbot/conf:/etc/letsencrypt
-    entrypoint: /bin/sh
-    command: -c "certbot certonly --webroot -w /var/www/certbot --email smarketics@smarketics.com -d moltbot.smarketics.com --text --agree-tos --no-eff-email --rsa-key-size 4096 --non-interactive || true; trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;"
-
 volumes:
   clawdbot_config:
   clawdbot_workspace:

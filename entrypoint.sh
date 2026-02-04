@@ -3,8 +3,15 @@
 # Exit on error
 set -e
 
-# Substitute environment variables in the template
-envsubst '$${NGINX_HOST}' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf
+HTTP_TEMPLATE=/etc/nginx/templates/default.http.conf.template
+HTTPS_TEMPLATE=/etc/nginx/templates/default.conf.template
+
+# Substitute environment variables in the appropriate template
+if [ -f /etc/letsencrypt/live/${NGINX_HOST}/fullchain.pem ]; then
+  envsubst '$${NGINX_HOST}' < "$HTTPS_TEMPLATE" > /etc/nginx/conf.d/default.conf
+else
+  envsubst '$${NGINX_HOST}' < "$HTTP_TEMPLATE" > /etc/nginx/conf.d/default.conf
+fi
 
 # Reload Nginx after the certificate appears (for HTTPS configs).
 (
@@ -13,6 +20,7 @@ envsubst '$${NGINX_HOST}' < /etc/nginx/templates/default.conf.template > /etc/ng
     sleep 5
   done
   echo "Certificate found; reloading Nginx..."
+  envsubst '$${NGINX_HOST}' < "$HTTPS_TEMPLATE" > /etc/nginx/conf.d/default.conf
   nginx -s reload
 ) &
 
